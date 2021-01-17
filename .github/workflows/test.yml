@@ -1,0 +1,31 @@
+name: Test
+
+on:
+  push:
+  pull_request:
+
+jobs:
+
+  test:
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    
+    - name: install git secret
+      run: brew install git-secret    
+    - name: Decrypt ThirdPartyKeys file
+      env: 
+        KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+      run: |
+        echo "$KEY" > ./private_key.gpg
+        gpg --import ./private_key.gpg
+        git secret reveal
+
+    - name: Install dependencies
+      run:  pod install
+    - name: Run tests
+      uses: maierj/fastlane-action@v1.4.0
+      with:
+        lane:  test_develop
